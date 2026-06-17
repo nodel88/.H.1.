@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCI Logo 球形3D效果</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e6ecff 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .sphere-wrapper {
+      width: 500px;
+      height: 500px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(22, 93, 255, 0.15);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #render-canvas {
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="sphere-wrapper">
+    <canvas id="render-canvas"></canvas>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    const wrapper = document.querySelector('.sphere-wrapper');
+    const canvas = document.getElementById('render-canvas');
+
+    // 初始化场景、相机、渲染器
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+    camera.position.z = 5;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true,
+      alpha: true
+    });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(500, 500);
+
+    // 光照系统
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    mainLight.position.set(3, 5, 4);
+    scene.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    fillLight.position.set(-3, -2, -3);
+    scene.add(fillLight);
+
+    // 创建高精度球体
+    const sphereGeo = new THREE.SphereGeometry(1.8, 64, 64);
+
+    // 加载Logo纹理
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.crossOrigin = 'anonymous';
+    const logoTexture = textureLoader.load('https://hci.cn/hci-logo.svg');
+    logoTexture.colorSpace = THREE.SRGBColorSpace;
+
+    // 球体材质
+    const sphereMat = new THREE.MeshStandardMaterial({
+      map: logoTexture,
+      roughness: 0.3,
+      metalness: 0.1
+    });
+
+    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    scene.add(sphere);
+
+    // 自动旋转动画
+    function animateLoop() {
+      requestAnimationFrame(animateLoop);
+      sphere.rotation.y += 0.005;
+      renderer.render(scene, camera);
+    }
+    animateLoop();
+
+    // 窗口自适应
+    window.addEventListener('resize', () => {
+      const size = Math.min(window.innerWidth - 40, 500);
+      wrapper.style.width = size + 'px';
+      wrapper.style.height = size + 'px';
+      camera.aspect = 1;
+      camera.updateProjectionMatrix();
+      renderer.setSize(size, size);
+    });
+  </script>
+</body>
+</html>
